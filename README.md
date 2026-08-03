@@ -1,5 +1,7 @@
 # Prolog-mode-analysis
 
+[![tests](https://github.com/FredMesnard/Prolog-mode-analysis/actions/workflows/tests.yml/badge.svg)](https://github.com/FredMesnard/Prolog-mode-analysis/actions/workflows/tests.yml)
+
 A mode (groundness) analyzer for a subset of ISO Prolog, written in SWI-Prolog.
 
 Given a program and an initial call pattern such as `pred(i,o)`, it infers the set of call modes reachable from that query, and generates a *mode-specialized* program in which each `p(i,o)` call becomes a distinct predicate `p_io/2`.
