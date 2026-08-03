@@ -16,7 +16,7 @@ modes : [parse(i,o),app(i,i,o),app(o,o,i)]
 
 ## Requirements
 
-SWI-Prolog (tested with 10.1.11) and nothing else. There is no build step and no package to install: clone or unpack, and run.
+SWI-Prolog (tested with 9.0.4 and 10.1.11) and nothing else. There is no build step and no package to install: clone or unpack, and run.
 
 An optional second Boolean domain, built on the `bddem` pack (CUDD), is faster on large programs. It needs the pack plus two small local additions; `install-bddem/fix-bddem.sh` builds and patches it. Everything works without it — `bool_op`, over SWI's `library(clpb)`, is the default.
 

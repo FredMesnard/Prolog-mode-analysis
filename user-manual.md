@@ -17,7 +17,7 @@ They produce the same modes; they differ only in performance. The choice is deta
 
 ## 1. Installation
 
-SWI-Prolog is the only mandatory dependency (tested with 10.1.11). There is no build step, no package manager, and no version control repository.
+SWI-Prolog is the only mandatory dependency (tested with 9.0.4 and 10.1.11). There is no build step and no package manager.
 
 Using `bddem_op` additionally requires the `bddem` pack **with two local patches**, exposing features CUDD implements but the pack did not surface:
 
