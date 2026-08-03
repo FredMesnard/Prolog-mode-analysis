@@ -1,0 +1,236 @@
+diff --git a/bddem.c b/bddem.c
+index 4959e99..a7bec41 100644
+--- a/bddem.c
++++ b/bddem.c
+@@ -822,6 +822,104 @@ static foreign_t reorder(term_t arg1)
+   return 1;
+ }
+ 
++/* Dynamic variable reordering control.
++
++   init/1 unconditionally turns on CUDD_REORDER_GROUP_SIFT, and there was no
++   way to observe or change that from Prolog. Since sifting fires on
++   node-count thresholds reached during construction, its cost is hard to
++   predict and can dominate; being able to switch it off makes the effect
++   measurable. */
++static const struct { const char * name; Cudd_ReorderingType type; }
++reorder_methods[] = {
++  {"none",            CUDD_REORDER_NONE},
++  {"same",            CUDD_REORDER_SAME},
++  {"random",          CUDD_REORDER_RANDOM},
++  {"random_pivot",    CUDD_REORDER_RANDOM_PIVOT},
++  {"sift",            CUDD_REORDER_SIFT},
++  {"sift_converge",   CUDD_REORDER_SIFT_CONVERGE},
++  {"symm_sift",       CUDD_REORDER_SYMM_SIFT},
++  {"symm_sift_conv",  CUDD_REORDER_SYMM_SIFT_CONV},
++  {"window2",         CUDD_REORDER_WINDOW2},
++  {"window3",         CUDD_REORDER_WINDOW3},
++  {"window4",         CUDD_REORDER_WINDOW4},
++  {"window2_conv",    CUDD_REORDER_WINDOW2_CONV},
++  {"window3_conv",    CUDD_REORDER_WINDOW3_CONV},
++  {"window4_conv",    CUDD_REORDER_WINDOW4_CONV},
++  {"group_sift",      CUDD_REORDER_GROUP_SIFT},
++  {"group_sift_conv", CUDD_REORDER_GROUP_SIFT_CONV},
++  {"annealing",       CUDD_REORDER_ANNEALING},
++  {"genetic",         CUDD_REORDER_GENETIC},
++  {"linear",          CUDD_REORDER_LINEAR},
++  {"linear_converge", CUDD_REORDER_LINEAR_CONVERGE},
++  {"lazy_sift",       CUDD_REORDER_LAZY_SIFT},
++  {"exact",           CUDD_REORDER_EXACT},
++  {NULL,              CUDD_REORDER_NONE}
++};
++
++/* set_reordering(+Env,+Method)
++   Method is one of the atoms above; 'none' disables automatic reordering.
++   Fails on an unknown method rather than silently doing nothing. */
++static foreign_t set_reordering(term_t arg1, term_t arg2)
++{
++  environment * env;
++  char * name;
++  int i,ret;
++
++  ret=PL_get_pointer(arg1,(void **)&env);
++  RETURN_IF_FAIL
++  ret=PL_get_atom_chars(arg2,&name);
++  RETURN_IF_FAIL
++
++  for (i=0;reorder_methods[i].name!=NULL;i++)
++  {
++    if (strcmp(name,reorder_methods[i].name)==0)
++    {
++      if (reorder_methods[i].type==CUDD_REORDER_NONE)
++        Cudd_AutodynDisable(env->mgr);
++      else
++        Cudd_AutodynEnable(env->mgr,reorder_methods[i].type);
++      return TRUE;
++    }
++  }
++  return FALSE;
++}
++
++/* reordering_status(+Env,-Method)
++   'none' when automatic reordering is off, else the active method. */
++static foreign_t reordering_status(term_t arg1, term_t arg2)
++{
++  environment * env;
++  Cudd_ReorderingType method;
++  term_t out;
++  int i,ret,on;
++
++  ret=PL_get_pointer(arg1,(void **)&env);
++  RETURN_IF_FAIL
++
++  method=CUDD_REORDER_NONE;
++  on=Cudd_ReorderingStatus(env->mgr,&method);
++  out=PL_new_term_ref();
++
++  if (!on)
++  {
++    ret=PL_put_atom_chars(out,"none");
++    RETURN_IF_FAIL
++    return PL_unify(out,arg2);
++  }
++  for (i=0;reorder_methods[i].name!=NULL;i++)
++  {
++    if (reorder_methods[i].type==method)
++    {
++      ret=PL_put_atom_chars(out,reorder_methods[i].name);
++      RETURN_IF_FAIL
++      return PL_unify(out,arg2);
++    }
++  }
++  ret=PL_put_atom_chars(out,"unknown");
++  RETURN_IF_FAIL
++  return PL_unify(out,arg2);
++}
++
+ double Prob_given_expl(DdNode *node, environment *env, tablerow *table, explan_t *expl, int comp_par)
+ {
+   int index, comp, pos;
+@@ -2797,6 +2895,96 @@ static foreign_t and(term_t arg1,term_t arg2,term_t arg3, term_t arg4)
+   return res;
+ }
+ 
++/* exist_abstract(+Env,+BDD,+ListOfVarIndices,-Out)
++
++   Existential quantification, i.e. exists V1..Vk . BDD, wrapping CUDD's
++   Cudd_bddExistAbstract. CUDD already implements this; only the Prolog
++   binding was missing, which forced callers to expand
++   "exists x F(x) <=> F(0) or F(1)" at the term level, doubling the formula
++   per eliminated variable.
++
++   The variables are given by their multi-valued indices, as returned by
++   add_var/4. The positive cube required by CUDD is built here rather than
++   in Prolog on purpose: a multi-valued variable spans several Boolean
++   variables, and for a binary one equality(V,0) is the POSITIVE literal
++   while equality(V,1) is the negative one, so a cube assembled in Prolog
++   from equality/4 results would be encoding-dependent and easy to get
++   silently wrong.
++
++   Encoding: a plain variable occupies nVal-1 Boolean variables starting at
++   firstBoolVar; a query variable occupies nVal of them. */
++static foreign_t exist_abstract(term_t arg1, term_t arg2, term_t arg3,
++                                term_t arg4)
++{
++  term_t out,list,head;
++  DdNode * node, * cube, * tmp, * var, * nodeout;
++  environment * env;
++  variable v;
++  int varIndex,i,nb,last,ret,res;
++
++  ret=PL_get_pointer(arg1,(void **)&env);
++  RETURN_IF_FAIL
++  ret=PL_get_pointer(arg2,(void **)&node);
++  RETURN_IF_FAIL
++
++  cube=Cudd_ReadOne(env->mgr);
++  Cudd_Ref(cube);
++
++  list=PL_copy_term_ref(arg3);
++  head=PL_new_term_ref();
++  while (PL_get_list(list,head,list))
++  {
++    if (!PL_get_integer(head,&varIndex))
++    {
++      Cudd_RecursiveDeref(env->mgr,cube);
++      return FALSE;
++    }
++    if (varIndex<0 || varIndex>=env->nVars)
++    {
++      Cudd_RecursiveDeref(env->mgr,cube);
++      return FALSE;
++    }
++    v=env->vars[varIndex];
++    nb=v.query ? v.nVal : v.nVal-1;
++    last=v.firstBoolVar+nb;
++    if (last>env->boolVars)
++      last=env->boolVars;
++    for (i=v.firstBoolVar;i<last;i++)
++    {
++      var=Cudd_bddIthVar(env->mgr,i);
++      tmp=Cudd_bddAnd(env->mgr,cube,var);
++      if (tmp==NULL)
++      {
++        Cudd_RecursiveDeref(env->mgr,cube);
++        return FALSE;
++      }
++      Cudd_Ref(tmp);
++      Cudd_RecursiveDeref(env->mgr,cube);
++      cube=tmp;
++    }
++  }
++  if (!PL_get_nil(list))
++  {
++    Cudd_RecursiveDeref(env->mgr,cube);
++    return FALSE;
++  }
++
++  nodeout=Cudd_bddExistAbstract(env->mgr,node,cube);
++  if (nodeout==NULL)
++  {
++    Cudd_RecursiveDeref(env->mgr,cube);
++    return FALSE;
++  }
++  Cudd_Ref(nodeout);
++  Cudd_RecursiveDeref(env->mgr,cube);
++
++  out=PL_new_term_ref();
++  ret=PL_put_pointer(out,(void *) nodeout);
++  RETURN_IF_FAIL
++  res=PL_unify(out,arg4);
++  return res;
++}
++
+ static foreign_t or(term_t arg1,term_t arg2,term_t arg3, term_t arg4)
+ {
+   term_t out;
+@@ -3981,6 +4169,7 @@ install_t install()
+   PL_register_foreign("add_abd_var",4,add_abd_var,0);
+   PL_register_foreign("equality",4,equality,0);
+   PL_register_foreign("and",4,and,0);
++  PL_register_foreign("exist_abstract",4,exist_abstract,0);
+   PL_register_foreign("one",2,one,0);
+   PL_register_foreign("zero",2,zero,0);
+   PL_register_foreign("or",4,or,0);
+@@ -3993,6 +4182,8 @@ install_t install()
+   PL_register_foreign("ret_abd_prob",4,ret_abd_prob,0);
+   PL_register_foreign("ret_map_prob",4,ret_map_prob,0);
+   PL_register_foreign("reorder",1,reorder,0);
++  PL_register_foreign("set_reordering",2,set_reordering,0);
++  PL_register_foreign("reordering_status",2,reordering_status,0);
+   PL_register_foreign("make_query_var",3,make_query_var,0);
+   PL_register_foreign("em",9,EM,0);
+   PL_register_foreign("rand_seed",1,rand_seed,0);
+diff --git a/prolog/bddem.pl b/prolog/bddem.pl
+index edaa301..e9871a9 100644
+--- a/prolog/bddem.pl
++++ b/prolog/bddem.pl
+@@ -1,6 +1,8 @@
+ :- module(bddem,[
+   init_em/1,init_ex/2,init/1,end_em/1,end_ex/1,end/1,
+   one/2,zero/2,and/4,or/4,bdd_not/3,
++  exist_abstract/4,
++  reorder/1,set_reordering/2,reordering_status/2,
+   ret_prob/3,equality/4,add_var/4,
+   add_abd_var/4,ret_abd_prob/4,
+   add_query_var/4,ret_map_prob/4,

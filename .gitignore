@@ -1,0 +1,18 @@
+# Kept local, deliberately out of the published repository
+CLAUDE.md
+manuel-utilisateur.md
+
+# macOS
+.DS_Store
+
+# Backups left by sed -i and by editors
+*.bak
+*.bak_*
+*.orig
+*~
+
+# Artefacts of the bddem build, produced inside the installed pack rather than
+# here, but listed in case someone builds in place
+*.o
+*.so
+*.dylib
