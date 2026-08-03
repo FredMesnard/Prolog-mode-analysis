@@ -1,0 +1,39 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # swi-prolog-nox omits the graphics stack, which nothing here uses.
+      # library(clpb), library(assoc), library(ugraphs) and library(time) all ship with it.
+      - name: Install SWI-Prolog
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends swi-prolog-nox
+
+      - name: Version
+        run: swipl --version
+
+      - name: Environment check
+        run: ./ma.sh --check
+
+      # The bddem pack is absent on the runner, so only bool_op (clpb) is exercised.
+      - name: Unit tests -- strongly connected components
+        run: swipl -g "use_module(tarjan), run_tests" -t halt
+
+      # The goal ends on N =:= 90, Bad == [], so a regression fails the build
+      # rather than merely printing FAIL lines.
+      - name: Regression sweep -- FilexTC, 90 programs
+        run: |
+          swipl -g "use_module(mode_analysis), expand_file_name('FilexTC/*.pl',Fs), length(Fs,N), findall(F,(member(F,Fs), \+ catch(mode_analysis(F,_),_,fail)),Bad), forall(member(B,Bad),format('FAIL ~w~n',[B])), length(Bad,NB), format('~w files, ~w failed~n',[N,NB]), N =:= 90, Bad == []" -t halt
+
+      - name: Launcher smoke test
+        run: ./ma.sh FilexTC/parse.pl
