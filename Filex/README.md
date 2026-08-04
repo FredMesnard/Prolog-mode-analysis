@@ -6,7 +6,7 @@ Most are small textbook predicates — `append/3`, `reverse/2`, `quicksort/2`, a
 
 | file | author, as declared in the file |
 |---|---|
-| `Filex/chat_pt.pl` | the CHAT-80 parser, Fernando C. N. Pereira and David H. D. Warren |
+| `Filex/chat_pt.pl.too.hard` | the CHAT-80 parser, Fernando C. N. Pereira and David H. D. Warren |
 | `Filex/qplan.pl` | the CHAT-80 query planner, David H. D. Warren |
 | `Filex/read.pl` | a Prolog reader, David H. D. Warren and Richard O'Keefe, later modified by Alan Mycroft |
 | `Filex/mmatrix.pl` | matrix multiplication benchmark, **"Copyright by Manuel Hermenegildo"**, 1986 |
@@ -19,4 +19,4 @@ If you are one of these authors, or hold rights in any of these programs, and wo
 ## Which corpus is which
 
 - **`FilexTC/`** — 90 small programs, each with an active `%query:` header. This is the regression set: all 90 must analyze successfully.
-- **`Filex/`** — 54 larger, messier real programs, 39 with an active query. Not a clean baseline. Two are slow enough to exclude from a sweep: `read.pl` (~49 s under clpb) and `chat_pt.pl` (~5 min under bddem, unfinished after 10 min under clpb, and timing out on 9 strongly connected components either way).
+- **`Filex/`** — 53 larger, messier real programs, 38 with an active query. Not a clean baseline. `read.pl` is slow enough to exclude from a sweep by hand (~49 s under clpb). A 54th program, `chat_pt.pl.too.hard`, is excluded by its name: the suffix keeps it out of every `Filex/*.pl` glob because it takes ~5 min under bddem, does not finish after 10 min under clpb, and times out on 9 strongly connected components either way. Rename it back to `.pl` to include it.

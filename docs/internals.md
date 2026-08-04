@@ -91,4 +91,4 @@ Do not reintroduce a size comparison before accepting that DNF. What costs is th
 
 ## Where the analyzer stops
 
-`Filex/chat_pt.pl`, the CHAT-80 parser, is the practical ceiling: 158 predicates, and 9 SCCs time out in either domain, so its 347 modes rest on a degraded model. The two shapes that defeat the method are visible there — predicates of very high arity (`possessive/14`, where projection ranges over 14 variables against a corpus maximum of 8) and large mutually recursive components, in this case a grammar knot joining `np`, `pp`, `obj`, `adj_phrase`, `comp_phrase` and their neighbours.
+`Filex/chat_pt.pl.too.hard`, the CHAT-80 parser, is the practical ceiling — and slow enough that its suffix keeps it out of the `Filex/*.pl` globs: 158 predicates, and 9 SCCs time out in either domain, so its 347 modes rest on a degraded model. The two shapes that defeat the method are visible there — predicates of very high arity (`possessive/14`, where projection ranges over 14 variables against a corpus maximum of 8) and large mutually recursive components, in this case a grammar knot joining `np`, `pp`, `obj`, `adj_phrase`, `comp_phrase` and their neighbours.

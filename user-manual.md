@@ -170,7 +170,7 @@ Included paths are then resolved relative to the directory of the file holding t
 | corpus | `bool_op` | `bddem_op` | ratio |
 |---|---|---|---|
 | `FilexTC`, 90 files | 4,847 ms | 2,546 ms | 1.90× |
-| `Filex`, 37 files (excluding `read.pl` and `chat_pt.pl`) | 19,827 ms | 2,968 ms | 6.68× |
+| `Filex`, 37 files (excluding `read.pl` and `chat_pt.pl.too.hard`) | 19,827 ms | 2,968 ms | 6.68× |
 | `Filex/read.pl` alone | ~49 s | ~4.0 s | ~12× |
 
 **Where each wins** — the overall gain is very unevenly distributed:
