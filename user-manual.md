@@ -240,11 +240,20 @@ On the `bool_op` side, `project/4` re-normalises its result: `eliminate/3` does 
 
 ## 7. Sweeping a corpus
 
+With `clpb`:
 ```bash
 swipl -g "use_module(mode_analysis), expand_file_name('FilexTC/*.pl',Fs), forall(member(F,Fs), catch((mode_analysis(F,C) -> format('OK   ~w ~w~n',[F,C]) ; format('FAIL ~w~n',[F])), E, format('ERR  ~w ~w~n',[F,E])))" -t halt
 ```
-
-Expect roughly 5 s.
+```bash
+swipl -g "use_module(mode_analysis), expand_file_name('Filex/*.pl',Fs), forall(member(F,Fs), catch((mode_analysis(F,C) -> format('OK   ~w ~w~n',[F,C]) ; format('FAIL ~w~n',[F])), E, format('ERR  ~w ~w~n',[F,E])))" -t halt
+```
+It is faster with `bddem`:
+```bash
+swipl -g "use_module(mode_analysis), use_module(dom,[set_domain/1]), set_domain(bddem_op), expand_file_name('FilexTC/*.pl',Fs), forall(member(F,Fs), catch((mode_analysis(F,C) -> format('OK   ~w ~w~n',[F,C]) ; format('FAIL ~w~n',[F])), E, format('ERR  ~w ~w~n',[F,E])))" -t halt
+```
+```bash
+swipl -g "use_module(mode_analysis), use_module(dom,[set_domain/1]), set_domain(bddem_op), expand_file_name('Filex/*.pl',Fs), forall(member(F,Fs), catch((mode_analysis(F,C) -> format('OK   ~w ~w~n',[F,C]) ; format('FAIL ~w~n',[F])), E, format('ERR  ~w ~w~n',[F,E])))" -t halt
+```
 
 ---
 
