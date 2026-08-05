@@ -1,5 +1,5 @@
 %%query: app(i,i,o).
-%%query: rev(i,o).
+%query: rev(i,o).
 %%query: rev(o,i).
 
 %/*

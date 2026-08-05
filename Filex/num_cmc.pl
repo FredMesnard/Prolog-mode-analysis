@@ -1,6 +1,8 @@
 %% Fred
 %% Juillet 97-99
 
+%query: calcul_mat_col(i,i,o,o).
+
 :-module(cmc,[calcul_mat_col/4]).
 
 :-use_module(library(lists),[same_length/2]).

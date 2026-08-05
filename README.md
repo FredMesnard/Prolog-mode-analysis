@@ -121,7 +121,7 @@ Unit tests cover the strongly-connected-components step:
 swipl -g "use_module(tarjan), run_tests" -t halt
 ```
 
-`Filex/` holds larger, messier real programs; 38 of its 53 files carry an active query. `read.pl` is slow enough to be worth excluding from a sweep, and a 54th program, `chat_pt.pl.too.hard`, is slower still — its suffix keeps it out of every `Filex/*.pl` glob.
+`Filex/` holds larger, messier real programs; 46 of its 47 files carry an active query, the exception being `apprev-no-init-query-should-fail.pl`, which checks that a missing query fails cleanly. `read.pl` is slow enough to be worth excluding from a sweep, and a 48th program, `chat_pt.pl.too.hard`, is slower still — its suffix keeps it out of every `Filex/*.pl` glob.
 
 Both corpora are **inputs to the analyzer, not part of it**, and the licence above does not extend to them. A few are recognisable programs by named authors, reproduced as reference benchmarks; `Filex/README.md` attributes them.
 

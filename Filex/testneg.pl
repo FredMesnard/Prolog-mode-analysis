@@ -1,3 +1,5 @@
+%query: p(i).
+
 p(X) :- \+ X=0.
 
 % q(X) :- call(X=0).

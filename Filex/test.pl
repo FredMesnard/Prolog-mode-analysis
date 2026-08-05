@@ -1,3 +1,5 @@
+%query: test2(i,i).
+
 test :- repeat.
 
 test0 :- fail, repeat.

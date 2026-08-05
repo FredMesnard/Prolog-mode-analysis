@@ -1,3 +1,5 @@
+%query: for(i,i).
+
 for(N,N).
 for(I,N):-less(I,N),for(s(I),N).
 

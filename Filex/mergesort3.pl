@@ -1,3 +1,5 @@
+%query: mergesort(i,o).
+
 mergesort([],[]).
 mergesort([x],[x]).
 mergesort(Xs,Ys) :-

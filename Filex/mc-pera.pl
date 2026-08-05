@@ -1,3 +1,5 @@
+%query: p(i,o).
+
 p([],[]).
 p(Xs,Ys):-%cti:{n(Zs)=n(Ms)},
 	eq(Xs,Ys),rev(Ys,[Z|Zs]),p(Zs,Ms).
