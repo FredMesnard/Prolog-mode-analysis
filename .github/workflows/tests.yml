@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # swi-prolog-nox omits the graphics stack, which nothing here uses.
       # library(clpb), library(assoc), library(ugraphs) and library(time) all ship with it.
