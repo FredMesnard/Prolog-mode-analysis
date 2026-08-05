@@ -71,13 +71,23 @@ etat_bddem() {
 }
 
 # Fatal version, used before an actual bddem_op run.
+#
+# Every message names the SWI-Prolog concerned and carries SWIPL into the
+# suggested command. The pack holds ONE native library, shared by every
+# SWI-Prolog on the machine and linked against exactly one of them, so a
+# rebuild launched without SWIPL silently retargets it at whatever the PATH
+# offers -- undoing the install the message was asking the reader to repair.
 verifier_bddem() {
+    local OU; OU="$(command -v "$SWIPL")"
     case "$(etat_bddem)" in
         ok) return 0 ;;
-        absent) erreur "the bddem pack is not installed. Run install-bddem/fix-bddem.sh." ;;
-        non_patche) erreur "the bddem pack lacks the exist_abstract/4 and set_reordering/2
-additions. Re-run install-bddem/fix-bddem.sh." ;;
-        *) erreur "cannot determine the state of the bddem pack." ;;
+        absent) erreur "the bddem pack is not installed for $OU.
+Run:  SWIPL=$OU install-bddem/fix-bddem.sh" ;;
+        non_patche) erreur "the bddem pack does not load for $OU, or lacks the
+exist_abstract/4 and set_reordering/2 additions. If another SWI-Prolog on this
+machine has claimed the pack's single native library, rebuild it for this one:
+Run:  SWIPL=$OU install-bddem/fix-bddem.sh --clean" ;;
+        *) erreur "cannot determine the state of the bddem pack for $OU." ;;
     esac
 }
 
