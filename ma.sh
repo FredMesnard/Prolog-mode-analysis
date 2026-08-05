@@ -13,6 +13,12 @@ set -uo pipefail
 
 RACINE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Which SWI-Prolog to run. A machine may carry several -- a package-manager
+# build and a swipl.framework one, say -- and the bddem pack is native code
+# linked against exactly one of them. This script is bash, so an interactive
+# shell alias never reaches it: without SWIPL, the choice is the PATH's.
+SWIPL="${SWIPL:-swipl}"
+
 DOMAINE=bool_op
 MODED=0
 QUIET=0
@@ -39,6 +45,12 @@ Options:
 
 Exit codes: 0 success, 1 analysis failed, 2 usage or environment error.
 
+Environment:
+  SWIPL     the SWI-Prolog to run, name or absolute path.
+            Default: the first swipl on PATH. Set it when the machine
+            carries several, since the bddem pack is native code bound
+            to one of them: SWIPL=/path/to/swipl ./ma.sh -b FILE
+
 Examples:
   ./ma.sh FilexTC/parse.pl
   ./ma.sh --bddem Filex/inorder.pl
@@ -51,7 +63,7 @@ erreur() { printf '\033[31mError:\033[0m %s\n' "$*" >&2; exit 2; }
 # Probe only: prints ok | absent | non_patche | inconnu and never exits, so
 # that --check can report instead of dying.
 etat_bddem() {
-    swipl -q -g "( \\+ exists_source(library(bddem)) -> writeln(absent)
+    "$SWIPL" -q -g "( \\+ exists_source(library(bddem)) -> writeln(absent)
         ; catch(use_module(library(bddem)),_,fail),
           current_predicate(bddem:exist_abstract/4),
           current_predicate(bddem:set_reordering/2)
@@ -78,8 +90,9 @@ while [ $# -gt 0 ]; do
         -t|--timeout) [ $# -ge 2 ] || erreur "--timeout expects a value."
                       TIMEOUT="$2"; shift 2 ;;
         -k|--check)
-            command -v swipl >/dev/null || erreur "swipl not found."
-            echo "swipl        : $(swipl --version)"
+            command -v "$SWIPL" >/dev/null || erreur "swipl not found. Set SWIPL=/path/to/swipl."
+            echo "swipl        : $("$SWIPL" --version)"
+            echo "swipl path   : $(command -v "$SWIPL")"
             echo "root         : $RACINE"
             [ -f "$RACINE/mode_analysis.pl" ] || erreur "mode_analysis.pl not found in $RACINE."
             echo "mode_analysis: found"
@@ -100,7 +113,7 @@ while [ $# -gt 0 ]; do
 done
 
 [ -n "$FICHIER" ] || { usage; exit 2; }
-command -v swipl >/dev/null || erreur "swipl not found. Set SWIPL=/path/to/swipl."
+command -v "$SWIPL" >/dev/null || erreur "swipl not found. Set SWIPL=/path/to/swipl."
 [ -f "$RACINE/mode_analysis.pl" ] || erreur "mode_analysis.pl not found in $RACINE."
 [ -f "$FICHIER" ] || erreur "file not found: $FICHIER"
 [ "$DOMAINE" = bddem_op ] && verifier_bddem
@@ -120,7 +133,7 @@ FICHIER_ABS="$(cd "$(dirname "$FICHIER")" && pwd)/$(basename "$FICHIER")"
 # therefore cannot break the goal's syntax.
 MA_RACINE="$RACINE" MA_FICHIER="$FICHIER_ABS" MA_REQUETE="$REQUETE" \
 MA_DOMAINE="$DOMAINE" MA_MODED="$MODED" MA_QUIET="$QUIET" MA_TIMEOUT="$TIMEOUT" \
-swipl -q -g "
+"$SWIPL" -q -g "
     getenv('MA_RACINE',R), getenv('MA_FICHIER',F),
     getenv('MA_DOMAINE',D), getenv('MA_MODED',M), getenv('MA_QUIET',Q),
     atom_concat(R,'/mode_analysis',MAM), use_module(MAM),

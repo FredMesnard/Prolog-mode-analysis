@@ -56,6 +56,12 @@ Without `QUERY`, it is read from the file's `%query:` header. The launcher locat
 
 Exit codes: `0` success, `1` analysis failed, `2` usage or environment error.
 
+One environment variable, `SWIPL`, names the SWI-Prolog to run; without it the launcher takes the first `swipl` on `PATH`. It matters when a machine carries more than one installation — a package-manager build alongside a `swipl.framework` one, say — because `bddem` is native code linked against exactly one of them, and they share a single pack directory, hence a single `bddem.so`. Note also that `ma.sh` is a `bash` script: an interactive shell alias for `swipl` never reaches it, so the launcher and your terminal can silently disagree on which Prolog is in use. `--check` prints the resolved path for that reason.
+
+```bash
+SWIPL=/path/to/swipl ./ma.sh --bddem Filex/inorder.pl
+```
+
 Examples:
 
 ```bash
