@@ -19,6 +19,7 @@
 :- module(bool_clph_bool,[clphs_clpbs/2]).
 
 :- use_module(utils).
+:- use_module(predef,[predef_nat_bool_tc/4]).
 
     
 clphs_clpbs(ClpHClauses,ClpBClauses) :-
@@ -66,5 +67,15 @@ predef_bool(A=B,BC) :- !,
 predef_bool(E is _, E) :- !.   
 predef_bool('$num'(_),1) :- !.
 predef_bool('$bool'(B),B) :- !.
+% Every other built-in: its Boolean meaning is in the predef.pl table.  Without
+% this clause they all fell through to the catch-all below -- hence `1', no
+% information -- and mode analysis never consulted the table at all.  Groundness
+% therefore crossed neither functor/3 nor =../2 nor atom_length/2 nor any of the
+% rest.  Only =/2 came through, and not by this route: CLP(H) normalisation
+% turns it into a constraint before it ever reaches here.
+% A's arguments are distinct fresh variables at this point (step 3,
+% prolog_clph:flatprologs_clphs/2), so unifying with the table's pattern binds
+% the returned formula to the clause's own variables.
+predef_bool(A,BC) :- predef_nat_bool_tc(A,_,BC,_), !.
 predef_bool(_,1).
 
