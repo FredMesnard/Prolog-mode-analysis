@@ -43,10 +43,11 @@ predef_iso(A) :- predef_iso(A,_,_,_),!.
 predef_include(A) :- predef_include(A,_,_,_),!.
 
 
-predef_include(tab(N),      [N=0],       N,   1).   % requires N ground
-predef_include(name(X,Y),   [X=0,Y>=0],  X*Y, 1).   % like atom_codes/2
+% predef_include(Predef, Cs, Bool, TermCond)
+predef_include(tab(N),      [N=0],       N,   N).   % requires N ground
+predef_include(name(X,Y),   [X=0,Y>=0],  X*Y, X+Y).   % like atom_codes/2
 predef_include(get(C),      [C=0],       C,   1).   % like get_code/1
-predef_include(length(L,N), [L>=0,N=0],  N,   1).   % N ground, L not necessarily
+predef_include(length(L,N), [L>=0,N=0],  N,   L+N).   % N ground, L not necessarily
 
 
 % predef_iso(AtPredefProlog,ContraintesEquivNum,ContraintesEquivBool,CondTerm)
