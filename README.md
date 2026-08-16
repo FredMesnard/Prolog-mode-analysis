@@ -135,13 +135,13 @@ Both corpora are **inputs to the analyzer, not part of it**, and the licence abo
 
 ### Timings
 
-Measured on a **MacBook Air (`Mac14,2`), Apple M2, 8 cores (4 performance + 4 efficiency), 16 GB, macOS 26.6.1, SWI-Prolog 10.1.11**: one sweep per domain in a single SWI-Prolog process, timing each file separately, analysis time only — startup and compilation are excluded. That machine is fanless, so a long run such as `read.pl` can be throttled; expect a few percent between repeats.
+Measured on an **iMac (`Mac16,3`), Apple M4, 10 cores (4 performance + 6 efficiency), 24 GB, macOS 26.6.1, SWI-Prolog 10.1.11**: one sweep per domain in a single SWI-Prolog process, timing each file separately, analysis time only — startup and compilation are excluded. Each sweep was run three times and the median is quoted; the `bool_op` passes stay within 4% of it, the `bddem_op` ones within 12%.
 
 | corpus | `bool_op` (clpb) | `bddem_op` (CUDD) | ratio |
 |---|---|---|---|
-| `FilexTC/`, 90 files | 4.62 s | 2.28 s | 2.0× |
-| `Filex/`, the 43 other files that resolve | 18.44 s | 2.74 s | 6.7× |
-| `Filex/read.pl` alone | 26.34 s | 3.38 s | 7.8× |
+| `FilexTC/`, 90 files | 3.98 s | 2.43 s | 1.6× |
+| `Filex/`, the 43 other files that resolve | 15.62 s | 3.13 s | 5.0× |
+| `Filex/read.pl` alone | 23.24 s | 3.48 s | 6.7× |
 
 `bddem_op` is *slower* than clpb on most of the cheap programs — creating a CUDD environment per operation dominates there — and wins on the expensive ones, which is what moves the totals. The two domains have never been observed to disagree: identical modes on all 90 `FilexTC` programs and on every `Filex` program that resolves at all.
 

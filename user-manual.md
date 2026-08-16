@@ -161,8 +161,8 @@ Included paths are then resolved relative to the directory of the file holding t
 | Prerequisites | none | `bddem` pack + 2 patches |
 | Small programs | **faster** | penalized by creating a CUDD environment per operation |
 | Large programs | penalized | **markedly faster** |
-| `FilexTC` corpus (90 files) | 4.6 s | **2.3 s** |
-| `Filex` corpus (43 files) | 18.4 s | **2.7 s** |
+| `FilexTC` corpus (90 files) | 4.0 s | **2.4 s** |
+| `Filex` corpus (43 files) | 15.6 s | **3.1 s** |
 | Behaviour | steady | steady (reordering off) |
 
 **In practice:** for a single, modest file the `bool_op` default is enough and avoids any installation. For a corpus sweep or a large program, `bddem_op` is worth switching to.
@@ -171,22 +171,22 @@ Included paths are then resolved relative to the directory of the file holding t
 
 **Correctness.** No disagreement between the two domains has ever been observed: 90/90 on `FilexTC`, 44/44 on `Filex` (`read.pl` included). Both self-checks in `mode_analysis/6` (the two top-down passes must agree, and the regenerated program must be singly-moded) pass in both domains across the whole corpus.
 
-**Measurement conditions.** Every figure in this section comes from a single campaign on a **MacBook Air (`Mac14,2`), Apple M2, 8 cores (4 performance + 4 efficiency), 16 GB, macOS 26.6.1, SWI-Prolog 10.1.11** — one sweep per domain in a single SWI-Prolog process, timing each file separately, analysis time only, startup and compilation excluded. The machine is fanless, so a long run can be throttled; expect a few percent between repeats.
+**Measurement conditions.** Every figure in this section comes from a single campaign on an **iMac (`Mac16,3`), Apple M4, 10 cores (4 performance + 6 efficiency), 24 GB, macOS 26.6.1, SWI-Prolog 10.1.11** — one sweep per domain in a single SWI-Prolog process, timing each file separately, analysis time only, startup and compilation excluded. Each sweep was run three times and the median is quoted, per corpus for the totals and per file for the tables below; the `bool_op` passes stay within 4% of it, the `bddem_op` ones within 12%.
 
 **Corpus totals**
 
 | corpus | `bool_op` | `bddem_op` | ratio |
 |---|---|---|---|
-| `FilexTC`, 90 files | 4,616 ms | 2,282 ms | 2.02× |
-| `Filex`, the 43 other files that resolve (excluding `read.pl`, `chat_pt.pl.too.hard` and the query-less `apprev-no-init-query-should-fail.pl`) | 18,440 ms | 2,742 ms | 6.73× |
-| `Filex/read.pl` alone | 26,341 ms | 3,379 ms | 7.80× |
+| `FilexTC`, 90 files | 3,980 ms | 2,427 ms | 1.64× |
+| `Filex`, the 43 other files that resolve (excluding `read.pl`, `chat_pt.pl.too.hard` and the query-less `apprev-no-init-query-should-fail.pl`) | 15,617 ms | 3,125 ms | 5.00× |
+| `Filex/read.pl` alone | 23,240 ms | 3,476 ms | 6.69× |
 
 **Where each wins** — the overall gain is very unevenly distributed:
 
-| corpus | bddem wins | bddem loses |
-|---|---|---|
-| `FilexTC` | 45 files | 45 files |
-| `Filex` | 12 files | 31 files |
+| corpus | bddem wins | bddem loses | tie |
+|---|---|---|---|
+| `FilexTC` | 41 files | 47 files | 2 files |
+| `Filex` | 10 files | 33 files | — |
 
 `bddem_op` is therefore slower on the *majority* of files; it wins only on the expensive ones — but those are what move the total.
 
@@ -194,21 +194,21 @@ Included paths are then resolved relative to the directory of the file holding t
 
 | file | `bool_op` | `bddem_op` | ratio |
 |---|---|---|---|
-| `Filex/inorder.pl` | 12,196 ms | 204 ms | 59.8× |
-| `FilexTC/mergesort.pl` | 755 ms | 90 ms | 8.4× |
-| `Filex/read.pl` | 26,341 ms | 3,379 ms | 7.8× |
-| `Filex/modulaGrammar.pl` | 1,630 ms | 221 ms | 7.4× |
-| `Filex/qplan.pl` | 689 ms | 132 ms | 5.2× |
-| `FilexTC/quicksort-fb.pl` | 423 ms | 97 ms | 4.4× |
+| `Filex/inorder.pl` | 10,277 ms | 230 ms | 44.7× |
+| `Filex/read.pl` | 23,240 ms | 3,476 ms | 6.7× |
+| `FilexTC/mergesort.pl` | 622 ms | 114 ms | 5.5× |
+| `Filex/modulaGrammar.pl` | 1,384 ms | 265 ms | 5.2× |
+| `Filex/qplan.pl` | 587 ms | 138 ms | 4.3× |
+| `FilexTC/quicksort-fb.pl` | 364 ms | 88 ms | 4.1× |
 
 **Least favourable cases** (measurable times only)
 
 | file | `bool_op` | `bddem_op` | ratio |
 |---|---|---|---|
-| `Filex/sequence.pl` | 19 ms | 52 ms | 0.37× |
-| `Filex/average1.pl` | 15 ms | 39 ms | 0.38× |
-| `Filex/from_caslog2.pl` | 15 ms | 35 ms | 0.43× |
-| `FilexTC/search_tree.pl` | 25 ms | 46 ms | 0.54× |
+| `Filex/average1.pl` | 13 ms | 56 ms | 0.23× |
+| `Filex/sequence.pl` | 18 ms | 72 ms | 0.25× |
+| `Filex/from_caslog2.pl` | 14 ms | 46 ms | 0.30× |
+| `Filex/from_caslog.pl` | 44 ms | 100 ms | 0.44× |
 
 The pattern is consistent: below a few tens of milliseconds, creating a CUDD environment per operation dominates and `bool_op` wins.
 
