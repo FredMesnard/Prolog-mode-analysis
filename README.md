@@ -115,6 +115,14 @@ The regression set is the 90 programs of `FilexTC/`, each carrying a `%query:` h
 swipl -g "use_module(mode_analysis), expand_file_name('FilexTC/*.pl',Fs), forall(member(F,Fs), catch((mode_analysis(F,C) -> format('OK   ~w ~w~n',[F,C]) ; format('FAIL ~w~n',[F])), E, format('ERR  ~w ~w~n',[F,E])))" -t halt
 ```
 
+That command selects no domain, so it runs under the default, **`bool_op`, over `library(clpb)`**. Add a `set_domain/1` to sweep the same corpus under `bddem_op`:
+
+```bash
+swipl -g "use_module(mode_analysis), use_module(dom,[set_domain/1]), set_domain(bddem_op), expand_file_name('FilexTC/*.pl',Fs), forall(member(F,Fs), catch((mode_analysis(F,C) -> format('OK   ~w ~w~n',[F,C]) ; format('FAIL ~w~n',[F])), E, format('ERR  ~w ~w~n',[F,E])))" -t halt
+```
+
+`.github/workflows/tests.yml` runs the `FilexTC` sweep, the unit tests below and a `ma.sh` smoke test on every push. The runner has no `bddem` pack, so **CI covers `bool_op` only** — `bddem_op` is tested locally or not at all. `Filex/` is not in CI either, being an unstable baseline.
+
 Unit tests cover the strongly-connected-components step:
 
 ```bash
@@ -124,6 +132,18 @@ swipl -g "use_module(tarjan), run_tests" -t halt
 `Filex/` holds larger, messier real programs; 44 of its 45 files carry an active query, the exception being `apprev-no-init-query-should-fail.pl`, which checks that a missing query fails cleanly. `read.pl` is slow enough to be worth excluding from a sweep, and a 46th program, `chat_pt.pl.too.hard`, is slower still — its suffix keeps it out of every `Filex/*.pl` glob.
 
 Both corpora are **inputs to the analyzer, not part of it**, and the licence above does not extend to them. A few are recognisable programs by named authors, reproduced as reference benchmarks; `Filex/README.md` attributes them.
+
+### Timings
+
+Measured on a **MacBook Air (`Mac14,2`), Apple M2, 8 cores (4 performance + 4 efficiency), 16 GB, macOS 26.6.1, SWI-Prolog 10.1.11**: one sweep per domain in a single SWI-Prolog process, timing each file separately, analysis time only — startup and compilation are excluded. That machine is fanless, so a long run such as `read.pl` can be throttled; expect a few percent between repeats.
+
+| corpus | `bool_op` (clpb) | `bddem_op` (CUDD) | ratio |
+|---|---|---|---|
+| `FilexTC/`, 90 files | 4.62 s | 2.28 s | 2.0× |
+| `Filex/`, the 43 other files that resolve | 18.44 s | 2.74 s | 6.7× |
+| `Filex/read.pl` alone | 26.34 s | 3.38 s | 7.8× |
+
+`bddem_op` is *slower* than clpb on most of the cheap programs — creating a CUDD environment per operation dominates there — and wins on the expensive ones, which is what moves the totals. The two domains have never been observed to disagree: identical modes on all 90 `FilexTC` programs and on every `Filex` program that resolves at all.
 
 ## Licence
 
